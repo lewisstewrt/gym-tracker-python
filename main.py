@@ -1,18 +1,8 @@
 from datetime import datetime
-import os
 from models import Workout
+from storage import load_workouts, save_Workout
 
-workouts = []
-
-if os.path.exists("workouts.csv"):
-    with open("workouts.csv","r") as f:
-        for line in f:
-            if line.strip():
-                exercise, sets, reps, weight, timestamp = line.strip().split(",")
-                workout = Workout(exercise, sets, reps, weight, timestamp)
-                workouts.append(workout)
-
-
+workouts = load_workouts()
 
 #  HEADER / UI FORMATTING
 def print_Header(title):
@@ -22,33 +12,27 @@ def print_Header(title):
     print("=" * width + "\n")
 
 
-# FUNCTION TO SAVE WORKOUTS TO CSV
-def save_Workout(workout):
-    with open("workouts.csv", "a") as f:
-            f.write(f"{workout.exercise},{workout.sets},{workout.reps},{workout.weight},{workout.timestamp}\n")
-
-
 # FUNCTION TO LOG EACH WORKOUT
 def log_Workout():
-    
+
     session_Timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-    
+
     try:
         num_Of_Exercises = int(input("Enter number of exercises done: "))
 
     except ValueError:
         print("Please enter a valid number.")
         return
-    
+
     for i in range(num_Of_Exercises):
-        
+
         while True:
             try:
                 exercise = input("Enter exercise: ").strip()
                 sets = int(input("Enter number of sets: "))
                 reps = int(input("Enter number of reps: "))
                 weight = float(input("Enter weight: "))
-            
+
             except ValueError:
                 print("Invalid input — numbers only. Try again.\n")
                 continue
@@ -63,7 +47,6 @@ def log_Workout():
             break
 
     print_Header("Workout successfully logged!")
-
 
 #FUNCTION TO DISPLAY ALL WORKOUTS LOGGED
 def view_Workouts():
