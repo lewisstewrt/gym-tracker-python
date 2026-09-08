@@ -28,8 +28,7 @@ if os.path.exists("workouts.csv"):
 
 
 #  HEADER / UI FORMATTING
-
-    def print_Header(title):
+def print_Header(title):
     width = 56
     print("\n" + "=" * width)
     print(title.center(width))
