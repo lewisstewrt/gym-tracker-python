@@ -23,14 +23,14 @@ CREATE TABLE IF NOT EXISTS sets (
 );
 """
 
-def get_Connection():
+def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn
 
 def create_tables():
-    with get_Connection() as conn:
+    with get_connection() as conn:
         conn.executescript(SCHEMA)
 
 def get_or_create_exercise(conn, name):
