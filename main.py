@@ -1,6 +1,7 @@
 from datetime import datetime
 from models import Workout
 from storage import load_workouts, save_Workout
+from db import get_connection, get_all_sets
 
 workouts = load_workouts()
 
@@ -50,25 +51,35 @@ def log_Workout():
 
 #FUNCTION TO DISPLAY ALL WORKOUTS LOGGED
 def view_Workouts():
-    if not workouts:
+    with get_connection() as conn:
+        rows = get_all_sets(conn)
+
+    if not rows:
         print("No workouts logged, get to work!\n")
         return
 
     print_Header("WORKOUT HISTORY")
 
-    current_Timestamp = None
+    current_Session = None
+    current_Exercise = None
 
-    for w in workouts:
-        if w.timestamp != current_Timestamp:
-            if current_Timestamp is not None:
+    for row in rows:
+        if row["session_id"] != current_Session:
+            if current_Session is not None:
                 print()
-                
-            current_Timestamp = w.timestamp
-            print(f"[{current_Timestamp}]")
+
+            current_Session = row["session_id"]
+            current_Exercise = None
+            date = datetime.fromisoformat(row["started_at"]).strftime("%d/%m/%Y %H:%M")
+            print(f"[{date}]")
             print("-" * 56)
 
-        print(f"{w.exercise:<25} - {w.sets}x{w.reps} @ {w.weight}kg")
-    
+        if row["name"] != current_Exercise:
+            current_Exercise = row["name"]
+            print(current_Exercise)
+
+        print(f"   Set {row['set_number']}: {row['reps']} reps @ {row['weight_kg']}kg")
+
     print()
 
 

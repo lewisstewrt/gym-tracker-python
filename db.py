@@ -54,6 +54,18 @@ def add_set(conn, session_id, exercise_id, set_number, reps, weight_kg):
     )
     return cur.lastrowid
 
+def get_all_sets(conn):
+    return conn.execute(
+        """
+        SELECT sets.session_id, sessions.started_at, exercises.name,
+               sets.set_number, sets.reps, sets.weight_kg
+        FROM sets
+        JOIN sessions  ON sessions.id  = sets.session_id
+        JOIN exercises ON exercises.id = sets.exercise_id
+        ORDER BY sessions.started_at, sets.id
+        """
+    ).fetchall()
+
 
 if __name__ == "__main__":
     create_tables()
