@@ -92,23 +92,35 @@ def search_Workouts():
         print("Search cant be empty\n")
         return
     
-    matches = [w for w in workouts if query in w.exercise.lower()]
+    with get_connection() as conn:
+        rows = get_all_sets(conn, query)
 
-    if not matches:
+    if not rows:
         print("No results.\n")
         return
-    
+
     print_Header("Search Results")
 
-    current_Timestamp = None
+    current_Session = None
+    current_Exercise = None
 
-    for w in matches:
-        if w.timestamp != current_Timestamp:
-            print(f"{w.timestamp}")
-            current_Timestamp = w.timestamp
-        
-        print(f"{w.exercise} - {w.sets}x{w.reps} @ {w.weight}kg")
-    
+    for row in rows:
+        if row["session_id"] != current_Session:
+            if current_Session is not None:
+                print()
+
+            current_Session = row["session_id"]
+            current_Exercise = None
+            date = datetime.fromisoformat(row["started_at"]).strftime("%d/%m/%Y %H:%M")
+            print(f"[{date}]")
+            print("-" * 56)
+
+        if row["name"] != current_Exercise:
+            current_Exercise = row["name"]
+            print(current_Exercise)
+
+        print(f"   Set {row['set_number']}: {row['reps']} reps @ {row['weight_kg']}kg")
+
     print()
 
 
