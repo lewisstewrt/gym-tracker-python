@@ -62,7 +62,7 @@ def get_all_sets(conn):
         FROM sets
         JOIN sessions  ON sessions.id  = sets.session_id
         JOIN exercises ON exercises.id = sets.exercise_id
-        ORDER BY sessions.started_at, sets.id
+        ORDER BY sessions.started_at, sets.session_id, sets.id
         """
     ).fetchall()
 
