@@ -1,7 +1,7 @@
 from datetime import datetime
 from models import Workout
 from storage import load_workouts, save_Workout
-from db import get_connection, get_all_sets
+from db import get_connection, get_all_sets, create_session, get_or_create_exercise, add_set
 
 workouts = load_workouts()
 
@@ -15,39 +15,53 @@ def print_Header(title):
 
 # FUNCTION TO LOG EACH WORKOUT
 def log_Workout():
-
-    session_Timestamp = datetime.now().strftime("%d/%m/%Y %H:%M")
-
+    print_Header("Log Workout")
+    new_Exercises = []
+    # 1. Ask how many exercises (or ask until they type 'done')
+    
     try:
-        num_Of_Exercises = int(input("Enter number of exercises done: "))
-
+        num_Of_Exercises = int(input("Enter number of exercises: "))
     except ValueError:
-        print("Please enter a valid number.")
-        return
-
+        print("Input must be integer.\n")
+        return 
+    # 2. For each exercise: ask the name, then sets, reps and weight
+    #    (collect these into a list first; don't save yet)
     for i in range(num_Of_Exercises):
-
         while True:
             try:
-                exercise = input("Enter exercise: ").strip()
-                sets = int(input("Enter number of sets: "))
-                reps = int(input("Enter number of reps: "))
-                weight = float(input("Enter weight: "))
-
+                exercise_Name = input("Enter exercise name: ").strip()
+                num_of_Sets = int(input("Enter number of sets: "))
+                num_of_reps = int(input("Enter number of reps: "))
+                weight = float(input("Enter weight (Kg): "))
             except ValueError:
-                print("Invalid input — numbers only. Try again.\n")
+                print("Invalid entry.")
                 continue
-
-            if not exercise:
-                print("Exercise name cant be empty.\n")
-                continue
-
-            workout = Workout(exercise, sets, reps, weight, session_Timestamp)
-            workouts.append(workout)
-            save_Workout(workout)
             break
 
-    print_Header("Workout successfully logged!")
+        new_Exercises.append((exercise_Name, num_of_Sets, num_of_reps, weight))
+
+    if not new_Exercises:
+         print("No exercises entered.\n")
+         return
+
+  
+
+    # 4. Open the database connection
+    with get_connection() as conn:
+    # 5. Create ONE session with the current time and keep its id
+            started_at = datetime.now().isoformat(timespec="minutes")
+            session_id = create_session(conn, started_at)
+
+            for name, sets, reps, weight in new_Exercises:
+                exercise_id = get_or_create_exercise(conn, name)
+                for set_number in range(1, sets+1):
+                    add_set(conn, session_id, exercise_id, set_number, reps, weight)
+
+    print_Header("Workout successfuly logged.")    
+    # 6. For each exercise in your list:
+    #       get its exercise id
+    #       add a row for every set
+    # 7. Print the success header
 
 #FUNCTION TO DISPLAY ALL WORKOUTS LOGGED
 def view_Workouts():
