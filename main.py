@@ -1,16 +1,19 @@
 from datetime import datetime
 from models import Workout
 from storage import load_workouts, save_Workout
-from db import get_connection, get_all_sets, create_session, get_or_create_exercise, add_set
+from db import get_connection, get_all_sets, create_session, get_or_create_exercise, add_set, deleteSession
 
 workouts = load_workouts()
 
-#  HEADER / UI FORMATTING
+
+# HEADER / UI FORMATTING
 def print_Header(title):
     width = 56
     print("\n" + "=" * width)
     print(title.center(width))
     print("=" * width + "\n")
+
+
 # FUNCTION TO LOG EACH WORKOUT
 def log_Workout():
     print_Header("Log Workout")
@@ -63,7 +66,7 @@ def log_Workout():
     print_Header("Workout successfully logged.")
 
 
-#FUNCTION TO DISPLAY ALL WORKOUTS LOGGED
+# FUNCTION TO DISPLAY ALL WORKOUTS LOGGED
 def view_Workouts():
     with get_connection() as conn:
         rows = get_all_sets(conn)
@@ -85,7 +88,7 @@ def view_Workouts():
             current_Session = row["session_id"]
             current_Exercise = None
             date = datetime.fromisoformat(row["started_at"]).strftime("%d/%m/%Y %H:%M")
-            print(f"[{date}]")
+            print(f"Session ID:{row['session_id']}, [{date}]")
             print("-" * 56)
 
         if row["name"] != current_Exercise:
@@ -97,7 +100,6 @@ def view_Workouts():
     print()
 
 
-
 def search_Workouts():
     print_Header("Search Workouts")
     query = input("Search exercise name: ").strip().lower()
@@ -105,7 +107,7 @@ def search_Workouts():
     if not query:
         print("Search cant be empty\n")
         return
-    
+
     with get_connection() as conn:
         rows = get_all_sets(conn, query)
 
@@ -138,8 +140,43 @@ def search_Workouts():
     print()
 
 
+# Delete a session
+def delete_session_menu():
+    with get_connection() as conn:
+        rows = get_all_sets(conn)
 
-#MENU FUNCTION TO DISPLAY USER MENU
+    if not rows:
+        print("Nothing to delete.")
+        return
+
+    view_Workouts()
+
+    try:
+        sessionId = int(input("Enter session id to delete: "))
+    except ValueError:
+        print("Session ID must be integer.")
+        return
+
+    print(f"Are you sure you want to delete session {sessionId}?\n")
+    confirmation = input("(y) or (n)").strip().lower()
+
+    if confirmation == "y":
+        with get_connection() as conn:
+            deleted_session = deleteSession(conn, sessionId)
+    elif confirmation == "n":
+        print("Cancelling deletion...")
+        return
+    else:
+        print("Invalid entry, cancelling deletion...")
+        return
+
+    if deleted_session == True:
+        print("Session deleted.")
+    else:
+        print("No session with that ID, please try again.")
+
+
+# MENU FUNCTION TO DISPLAY USER MENU
 def menu():
     while True:
         print_Header("WELCOME TO THE GYM TRACKER")
@@ -147,20 +184,24 @@ def menu():
         print("1) Log workout")
         print("2) View workouts")
         print("3) Search workouts")
-        print("4) Exit")
+        print("4) Delete session")
+        print("5) Exit")
 
         choice = input("\nEnter choice --> ").strip()
 
         if choice == "1":
             log_Workout()
-            
+
         elif choice == "2":
             view_Workouts()
-        
+
         elif choice == "3":
             search_Workouts()
-        
+
         elif choice == "4":
+            delete_session_menu()
+
+        elif choice == "5":
             print_Header("Application closing...")
             break
 
